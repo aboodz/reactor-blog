@@ -1,0 +1,11 @@
+version: "3"
+services:
+  database:
+    container_name: blogs-db
+    image: "postgres:12.3-alpine"
+    environment:
+      - POSTGRES_USER=blog-db-user
+      - POSTGRES_PASSWORD=strong-password
+      - POSTGRES_DB=blog
+    ports:
+      - "55442:5432"

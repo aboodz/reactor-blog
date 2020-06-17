@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'io.github.aboodz'
+version '0.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+}
+
+application {
+    mainClassName 'io.github.aboodz.Application'
+}
+
+dependencies {
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    // reactor
+    implementation 'io.projectreactor.netty:reactor-netty:0.9.8.RELEASE'
+
+    // utils
+    implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'com.google.inject:guice:4.2.3'
+
+    // loggers
+    implementation 'org.apache.logging.log4j:log4j-api:2.13.3'
+    implementation 'org.apache.logging.log4j:log4j-core:2.13.3'
+
+    // data
+    implementation 'io.r2dbc:r2dbc-pool:0.8.3.RELEASE'
+    implementation 'io.r2dbc:r2dbc-postgresql:0.8.3.RELEASE'
+    implementation 'io.r2dbc:r2dbc-client:0.8.0.RC1'
+
+    // tests
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+}
+
+test {
+    useJUnitPlatform()
+}
