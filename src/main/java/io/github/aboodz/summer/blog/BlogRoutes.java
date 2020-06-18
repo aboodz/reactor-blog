@@ -1,9 +1,10 @@
 package io.github.aboodz.summer.blog;
 
 
+import io.github.aboodz.summer.server.DefaultHandlerResolver;
+import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.Routable;
 import lombok.extern.log4j.Log4j2;
-import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRoutes;
 
 import javax.inject.Inject;
@@ -14,6 +15,7 @@ import javax.inject.Singleton;
 public class BlogRoutes implements Routable {
 
     private final BlogHandler blogHandler;
+    private final HandlerResolver resolver = new DefaultHandlerResolver();
 
     @Inject
     BlogRoutes(BlogHandler blogHandler) {
@@ -22,10 +24,7 @@ public class BlogRoutes implements Routable {
 
     @Override
     public void defineRoutes(HttpServerRoutes routes) {
-        routes.get("/blog", (httpServerRequest, httpServerResponse) -> {
-
-            Mono<String> blog = blogHandler.getBlog(httpServerRequest);
-            return httpServerResponse.sendString(blog);
-        });
+        routes.get("/blog", resolver.resolve(blogHandler::getBlog));
     }
+
 }
