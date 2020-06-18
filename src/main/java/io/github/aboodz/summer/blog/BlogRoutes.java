@@ -1,7 +1,6 @@
 package io.github.aboodz.summer.blog;
 
 
-import io.github.aboodz.summer.server.DefaultHandlerResolver;
 import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.Routable;
 import lombok.extern.log4j.Log4j2;
@@ -15,11 +14,12 @@ import javax.inject.Singleton;
 public class BlogRoutes implements Routable {
 
     private final BlogHandler blogHandler;
-    private final HandlerResolver resolver = new DefaultHandlerResolver();
+    private final HandlerResolver resolver;
 
     @Inject
-    BlogRoutes(BlogHandler blogHandler) {
+    BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
         this.blogHandler = blogHandler;
+        this.resolver = resolver;
     }
 
     @Override
