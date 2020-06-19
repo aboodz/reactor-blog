@@ -8,6 +8,7 @@ public class ServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new SerDesModule());
         bind(HandlerResolver.class).to(DefaultHandlerResolver.class);
     }
 
