@@ -20,7 +20,7 @@ public class DefaultHandlerResolver implements HandlerResolver {
         this.gson = gson;
     }
 
-    public BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> resolve(Function<HttpServerRequest, ResponseBuilder> handlerFunction) {
+    public BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> resolve(Function<HttpServerRequest, HandlerResult> handlerFunction) {
         return (request, response) -> handlerFunction.apply(request).apply(response, gson);
     }
 

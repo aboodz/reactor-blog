@@ -14,30 +14,30 @@ import reactor.netty.http.server.HttpServerResponse;
 import java.io.Serializable;
 import java.util.function.BiFunction;
 
-public class ResponseBuilder implements BiFunction<HttpServerResponse, Gson, Publisher<Void>> {
+public class HandlerResult implements BiFunction<HttpServerResponse, Gson, Publisher<Void>> {
 
     protected HttpResponseStatus status;
     protected Multimap<String, String> headers = LinkedHashMultimap.create();
     protected Serializable body;
 
-    ResponseBuilder(HttpResponseStatus status) {
+    HandlerResult(HttpResponseStatus status) {
         this.status = status;
     }
 
-    public static ResponseBuilder ok() {
+    public static HandlerResult ok() {
         return status(HttpResponseStatus.OK);
     }
 
-    public static ResponseBuilder status(HttpResponseStatus status) {
-        return new ResponseBuilder(status);
+    public static HandlerResult status(HttpResponseStatus status) {
+        return new HandlerResult(status);
     }
 
-    public ResponseBuilder header(String header, String value) {
+    public HandlerResult header(String header, String value) {
         headers.put(header, value);
         return this;
     }
 
-    public ResponseBuilder body(Serializable body) {
+    public HandlerResult body(Serializable body) {
         this.body = body;
         return this;
     }
