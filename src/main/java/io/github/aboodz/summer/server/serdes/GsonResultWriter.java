@@ -1,10 +1,12 @@
 package io.github.aboodz.summer.server.serdes;
 
+import com.google.common.net.MediaType;
 import com.google.gson.Gson;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 
 import javax.inject.Inject;
 import java.lang.reflect.Type;
-import java.util.function.Supplier;
 
 public class GsonResultWriter implements ResultWriter {
 
@@ -16,13 +18,23 @@ public class GsonResultWriter implements ResultWriter {
     }
 
     @Override
-    public Supplier<String> write(Object obj) {
-        return () -> gson.toJson(obj);
+    public WriterFunction write(Object obj) {
+        return write(obj, obj.getClass());
     }
 
     @Override
-    public Supplier<String> write(Object obj, Type typeOfSrc) {
-        return () -> gson.toJson(obj, typeOfSrc);
+    public WriterFunction write(Object obj, Type typeOfSrc) {
+        return new WriterFunction() {
+            @Override
+            public MediaType getMediaType() {
+                return MediaType.JSON_UTF_8;
+            }
+
+            @Override
+            public Publisher<byte[]> get() {
+                return Mono.fromSupplier(() -> gson.toJson(obj, typeOfSrc).getBytes());
+            }
+        };
     }
 
 }

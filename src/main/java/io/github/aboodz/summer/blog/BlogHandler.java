@@ -21,9 +21,7 @@ public class BlogHandler {
     }
 
     public HandlerResult getBlog(HttpServerRequest httpServerRequest) {
-        return ok().body(
-                writer.write(new Blog("Hello, this is my blog"))
-        );
+        return ok().body(writer.write(new Blog("Hello, this is my blog")));
     }
 
 }
