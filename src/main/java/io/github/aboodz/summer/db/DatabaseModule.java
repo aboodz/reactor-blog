@@ -1,23 +1,13 @@
 package io.github.aboodz.summer.db;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+import io.r2dbc.client.R2dbc;
 
 public class DatabaseModule extends AbstractModule {
 
-    @Provides
-    public DatabaseConfiguration databaseConfiguration() {
-        return new DatabaseConfiguration();
-    }
-
-    @Provides
-    public DatabaseConnection databaseConnection(DatabaseConfiguration databaseConfiguration) {
-        return new DatabaseConnection(databaseConfiguration);
-    }
-
-    @Provides
-    public DatabaseClient databaseClient(DatabaseConnection databaseConnection) {
-        return new DatabaseClient(databaseConnection);
+    @Override
+    protected void configure() {
+        bind(R2dbc.class).toProvider(R2dbcProvider.class).asEagerSingleton();
     }
 
 }

@@ -5,15 +5,17 @@ import io.r2dbc.client.R2dbc;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class DatabaseClient implements Provider<R2dbc> {
+public class R2dbcProvider implements Provider<R2dbc> {
 
-    private final R2dbc r2dbc;
+    private final DatabaseConnection databaseConnection;
 
     @Inject
-    DatabaseClient(DatabaseConnection databaseConnection) {
+    R2dbcProvider(DatabaseConnection databaseConnection) {
+        this.databaseConnection = databaseConnection;
     }
 
     @Override
     public R2dbc get() {
-        new R2dbc(databaseConnection.getPool());    }
+        return new R2dbc(databaseConnection.getPool());
+    }
 }
