@@ -2,11 +2,11 @@ package io.github.aboodz.summer.blog.dao;
 
 import reactor.core.publisher.Mono;
 
-public interface ReactiveDao<T> {
+public interface ReactiveDao<T, KEY> {
 
-    Mono<T> get(Long id);
-    Mono<Void> insert(T entity);
+    Mono<T> get(KEY id);
+    Mono<KEY> insert(T entity);
     Mono<Void> update(T entity);
-    Mono<Void> delete(Long id);
+    Mono<Void> delete(KEY id);
 
 }

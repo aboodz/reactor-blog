@@ -10,10 +10,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.function.Function;
 
 @Singleton
 @Log4j2
-public class PostDao implements ReactiveDao<Post> {
+public class PostDao implements ReactiveDao<Post, Long> {
 
     private final R2dbc r2dbc;
 
@@ -30,7 +31,7 @@ public class PostDao implements ReactiveDao<Post> {
                         .mapResult(result -> Mono.from(result.getRowsUpdated())
                                 .flatMapMany(numberOfItems -> {
                                     if (numberOfItems == 0) return Mono.empty();
-                                    if (numberOfItems > 1) throw new NonUniqueItemException();
+                                    if (numberOfItems > 1) return Mono.error(NonUniqueItemException::new);
                                     // TODO: maybe we can pass this as a mapping function that takes result and returns object
                                     return result.map((row, rowMetadata) -> new Post(
                                             row.get("id", Long.class),
@@ -43,8 +44,20 @@ public class PostDao implements ReactiveDao<Post> {
     }
 
     @Override
-    public Mono<Void> insert(Post entity) {
-        throw new UnsupportedOperationException();
+    public Mono<Long> insert(Post entity) {
+        return r2dbc.inTransaction(
+                handle -> handle.select("select nextval('posts_id_seq')")
+                        .mapRow(row -> row.get(0, Long.class))
+                        .single()
+                        .flatMap(id ->
+                                handle.execute("INSERT INTO POSTS VALUES ($1, $2, $3, $4)",
+                                        id,
+                                        entity.getTitle(),
+                                        entity.getBody(),
+                                        entity.getKeywords().toArray(new String[0])
+                                ).map(i -> id).single()
+                        )
+        ).single();
     }
 
     @Override
