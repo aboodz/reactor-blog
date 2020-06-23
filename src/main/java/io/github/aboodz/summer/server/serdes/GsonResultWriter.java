@@ -6,6 +6,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.lang.reflect.Type;
 
 public class GsonResultWriter implements ResultWriter {
@@ -17,13 +18,18 @@ public class GsonResultWriter implements ResultWriter {
         this.gson = gson;
     }
 
-    @Override
-    public WriterFunction write(Object obj) {
-        return write(obj, obj.getClass());
-    }
+//    @Override
+//    public WriterFunction write(Object obj) {
+//        return write(obj, obj.getClass());
+//    }
+//
+//    @Override
+//    public WriterFunction write(Object obj, Type typeOfSrc) {
+//        return write(Mono.just(obj), typeOfSrc);
+//    }
 
     @Override
-    public WriterFunction write(Object obj, Type typeOfSrc) {
+    public WriterFunction write(Publisher<? extends Serializable> obj, Type typeOfSrc) {
         return new WriterFunction() {
             @Override
             public MediaType getMediaType() {
@@ -32,9 +38,11 @@ public class GsonResultWriter implements ResultWriter {
 
             @Override
             public Publisher<byte[]> get() {
-                return Mono.fromSupplier(() -> gson.toJson(obj, typeOfSrc).getBytes());
+                return Mono.from(obj)
+                        .map((o) -> gson.toJson(o, typeOfSrc).getBytes());
             }
         };
     }
+
 
 }

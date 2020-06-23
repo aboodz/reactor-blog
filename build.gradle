@@ -40,8 +40,19 @@ dependencies {
     // tests
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    testImplementation "org.testcontainers:junit-jupiter:1.14.3"
+    testImplementation "io.projectreactor:reactor-test:3.2.3.RELEASE"
+    testCompile "org.testcontainers:postgresql:1.14.3"
+    testCompile "org.testcontainers:r2dbc:1.14.3"
+}
+
+// copies db init file to test resources
+task copySql(type: Copy) {
+    from "$projectDir/sql/"
+    include "**/*.sql"
+    into "$buildDir/resources/test/sql"
 }
 
 test {
     useJUnitPlatform()
-}
+} dependsOn copySql
