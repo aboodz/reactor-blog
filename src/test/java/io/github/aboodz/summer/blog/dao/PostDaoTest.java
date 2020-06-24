@@ -121,5 +121,32 @@ class PostDaoTest {
     }
 
 
+    @Nested
+    class DeleteTest {
+
+        @Test
+        void givenExistingPost_delete_shouldDelete() {
+            PostDao postDao = new PostDao(r2dbc);
+
+            Mono<Post> actualPost = postDao.delete(1L)
+                    .then(postDao.get(1L));
+
+            StepVerifier.create(actualPost)
+                    .verifyComplete();
+        }
+
+        @Test
+        void givenNonExistingPost_delete_shouldDoNothing() {
+            PostDao postDao = new PostDao(r2dbc);
+
+            Mono<Post> actualPost = postDao.delete(2L)
+                    .then(postDao.get(2L));
+
+            StepVerifier.create(actualPost)
+                    .verifyComplete();
+        }
+
+    }
+
 
 }

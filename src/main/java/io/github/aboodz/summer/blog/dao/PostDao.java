@@ -78,6 +78,8 @@ public class PostDao implements ReactiveDao<Post, Long> {
 
     @Override
     public Mono<Void> delete(Long id) {
-        throw new UnsupportedOperationException();
+        return r2dbc.inTransaction(
+                handle -> handle.execute("delete from posts where id = $1", id).single()
+        ).single().then();
     }
 }
