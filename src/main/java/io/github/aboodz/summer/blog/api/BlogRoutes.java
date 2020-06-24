@@ -1,4 +1,4 @@
-package io.github.aboodz.summer.blog;
+package io.github.aboodz.summer.blog.api;
 
 
 import io.github.aboodz.summer.server.HandlerResolver;
@@ -17,14 +17,15 @@ public class BlogRoutes implements Routable {
     private final HandlerResolver resolver;
 
     @Inject
-    BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
+    public BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
         this.blogHandler = blogHandler;
         this.resolver = resolver;
     }
 
     @Override
     public void defineRoutes(HttpServerRoutes routes) {
-        routes.get("/blog", resolver.resolve(blogHandler::getBlog));
+        routes.get("/blog/{id}", resolver.resolveMono(blogHandler::getBlog));
+        routes.post("/blog/{id}", resolver.resolveMono(blogHandler::getBlog));
     }
 
 }

@@ -7,8 +7,8 @@ import java.lang.reflect.Type;
 
 public interface ResultWriter {
 
-//    WriterFunction write(Object obj);
-//    WriterFunction write(Object obj, Type typeOfSrc);
-    WriterFunction write(Publisher<? extends Serializable> obj, Type typeOfSrc);
+    <T extends Serializable> WriterFunction write(T obj);
+    <T extends Serializable> WriterFunction write(T obj, Class<T> typeOfSrc);
+    <T extends Serializable> WriterFunction write(Publisher<T> obj, Class<T> typeOfSrc);
 
 }

@@ -2,6 +2,8 @@ package io.github.aboodz.summer.blog;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import io.github.aboodz.summer.blog.api.BlogHandler;
+import io.github.aboodz.summer.blog.api.BlogRoutes;
 import io.github.aboodz.summer.db.DatabaseModule;
 import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.Routable;

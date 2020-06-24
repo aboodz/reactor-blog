@@ -18,18 +18,19 @@ public class GsonResultWriter implements ResultWriter {
         this.gson = gson;
     }
 
-//    @Override
-//    public WriterFunction write(Object obj) {
-//        return write(obj, obj.getClass());
-//    }
-//
-//    @Override
-//    public WriterFunction write(Object obj, Type typeOfSrc) {
-//        return write(Mono.just(obj), typeOfSrc);
-//    }
 
     @Override
-    public WriterFunction write(Publisher<? extends Serializable> obj, Type typeOfSrc) {
+    public <T extends Serializable> WriterFunction write(T obj) {
+        return write(Mono.just(obj), (Class<T>) obj.getClass());
+    }
+
+    @Override
+    public <T extends Serializable> WriterFunction write(T obj, Class<T> typeOfSrc) {
+        return write(Mono.just(obj), typeOfSrc);
+    }
+
+    @Override
+    public <T extends Serializable> WriterFunction write(Publisher<T> obj, Class<T> typeOfSrc) {
         return new WriterFunction() {
             @Override
             public MediaType getMediaType() {

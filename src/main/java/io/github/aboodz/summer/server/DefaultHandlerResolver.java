@@ -1,6 +1,7 @@
 package io.github.aboodz.summer.server;
 
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
@@ -11,8 +12,16 @@ import java.util.function.Function;
 @Singleton
 public class DefaultHandlerResolver implements HandlerResolver {
 
+    @Override
     public BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> resolve(Function<HttpServerRequest, HandlerResult> handlerFunction) {
         return (request, response) -> handlerFunction.apply(request).apply(response);
+    }
+
+    @Override
+    public BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> resolveMono(Function<HttpServerRequest, Mono<HandlerResult>> handlerFunction) {
+        return (request, response) -> handlerFunction.apply(request).flatMap(
+                handlerResult -> Mono.from(handlerResult.apply(response))
+        );
     }
 
 }
