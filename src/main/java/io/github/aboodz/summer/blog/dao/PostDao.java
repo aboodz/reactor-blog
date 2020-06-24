@@ -1,5 +1,6 @@
 package io.github.aboodz.summer.blog.dao;
 
+import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.dao.exceptions.NonUniqueItemException;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.r2dbc.client.R2dbc;
@@ -67,7 +68,11 @@ public class PostDao implements ReactiveDao<Post, Long> {
                         entity.getBody(),
                         entity.getKeywords().toArray(new String[0]),
                         entity.getId()
-                )
+                ).doOnNext(affectedRows -> {
+                    if (affectedRows == 0) {
+                        throw new EntityNotFoundException();
+                    }
+                })
         ).single().then();
     }
 

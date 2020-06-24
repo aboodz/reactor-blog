@@ -1,5 +1,6 @@
 package io.github.aboodz.summer.blog.dao;
 
+import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.test.db.DatabaseFixture;
 import io.r2dbc.client.R2dbc;
@@ -52,7 +53,7 @@ class PostDaoTest {
     }
 
     @Nested
-    public class InsertTest {
+    class InsertTest {
 
         @Test
         void givenPost_insert_shouldInsertPost() {
@@ -89,7 +90,7 @@ class PostDaoTest {
 
 
     @Nested
-    public class UpdateTest {
+    class UpdateTest {
 
         @Test
         void givenExistingPost_update_shouldUpdateChangedFields() {
@@ -106,11 +107,19 @@ class PostDaoTest {
                     .verifyComplete();
         }
 
+        @Test
+        void givenNonExistingPost_update_shouldFail() {
+            PostDao postDao = new PostDao(r2dbc);
+
+            Post post = new Post(3L, "bla", "bla", Set.of("java"));
+
+            Mono<Void> actual = postDao.update(post);
+
+            StepVerifier.create(actual)
+                    .verifyError(EntityNotFoundException.class);
+        }
     }
 
 
-    @Test
-    void delete() {
-    }
 
 }

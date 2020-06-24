@@ -10,7 +10,7 @@ import java.util.Set;
 @With
 public class Post implements Serializable {
     private final Long id;
-    private final String body;
     private final String title;
+    private final String body;
     private final Set<String> keywords;
 }
