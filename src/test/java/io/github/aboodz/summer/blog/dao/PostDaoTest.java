@@ -24,10 +24,10 @@ class PostDaoTest {
     }
 
     @Nested
-    public class GetTest {
+    class GetTest {
 
         @Test
-        public void givenAnExistingItemId_get_shouldEmitTheEntity() {
+        void givenAnExistingItemId_get_shouldEmitTheEntity() {
             Mono<Post> postMono = new PostDao(r2dbc).get(1L);
 
             StepVerifier.create(postMono)
@@ -43,7 +43,7 @@ class PostDaoTest {
         }
 
         @Test
-        public void givenNonExistingItemId_get_shouldEmitError() {
+        void givenNonExistingItemId_get_shouldEmitError() {
             Mono<Post> postMono = new PostDao(r2dbc).get(2L);
             StepVerifier.create(postMono)
                     .verifyComplete();
@@ -55,7 +55,7 @@ class PostDaoTest {
     public class InsertTest {
 
         @Test
-        public void givenPost_insert_shouldInsertPost() {
+        void givenPost_insert_shouldInsertPost() {
             PostDao postDao = new PostDao(r2dbc);
             Post post = new Post(null, "test", "test", Set.of("test"));
 
@@ -71,7 +71,7 @@ class PostDaoTest {
         }
 
         @Test
-        public void givenPostWithNonNullId_insert_shouldInsertPostIgnoringTheId() {
+        void givenPostWithNonNullId_insert_shouldInsertPostIgnoringTheId() {
             PostDao postDao = new PostDao(r2dbc);
             Post expectedPost = new Post(4L, "test", "test", Set.of("test"));
 
@@ -92,12 +92,19 @@ class PostDaoTest {
     public class UpdateTest {
 
         @Test
-        void update() {
+        void givenExistingPost_update_shouldUpdateChangedFields() {
             PostDao postDao = new PostDao(r2dbc);
+            Post updated = postDao.get(1L)
+                    .block()
+                    .withBody("changed body");
 
-            postDao.get(1L);
+            Mono<Post> actualPost = postDao.update(updated)
+                    .then(postDao.get(updated.getId()));
+
+            StepVerifier.create(actualPost)
+                    .expectNext(updated)
+                    .verifyComplete();
         }
-
 
     }
 

@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.function.Function;
 
 @Singleton
 @Log4j2
@@ -62,7 +61,14 @@ public class PostDao implements ReactiveDao<Post, Long> {
 
     @Override
     public Mono<Void> update(Post entity) {
-        throw new UnsupportedOperationException();
+        return r2dbc.inTransaction(
+                handle -> handle.execute("update posts set title = $1, body = $2, keywords = $3 where id = $4",
+                        entity.getTitle(),
+                        entity.getBody(),
+                        entity.getKeywords().toArray(new String[0]),
+                        entity.getId()
+                )
+        ).single().then();
     }
 
     @Override

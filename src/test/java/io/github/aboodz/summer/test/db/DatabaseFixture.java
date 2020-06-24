@@ -14,9 +14,12 @@ public class DatabaseFixture {
         PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:12.3-alpine")
                 .withClasspathResourceMapping("./sql/1-init.sql", "/docker-entrypoint-initdb.d/1.sql", BindMode.READ_ONLY)
                 .withClasspathResourceMapping("./sql/posts-data.sql", "/docker-entrypoint-initdb.d/2.sql", BindMode.READ_ONLY)
+//                .withCommand("postgres -c log_statement=all -c log_destination=stderr")
                 .withStartupTimeoutSeconds(5);
         PostgreSQLR2DBCDatabaseContainer postgreSQLR2DBCDatabaseContainer = new PostgreSQLR2DBCDatabaseContainer(container);
         postgreSQLR2DBCDatabaseContainer.start();
+
+//        container.followOutput(outputFrame -> System.out.println(outputFrame.getUtf8String()));
 
         ConnectionFactoryOptions options = PostgreSQLR2DBCDatabaseContainer.getOptions(container);
         PostgresqlConnectionFactory postgresqlConnectionFactory = new PostgresqlConnectionFactoryProvider().create(options);
