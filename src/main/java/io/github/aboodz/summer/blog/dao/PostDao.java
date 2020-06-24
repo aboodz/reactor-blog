@@ -35,8 +35,8 @@ public class PostDao implements ReactiveDao<Post, Long> {
                                     // TODO: maybe we can pass this as a mapping function that takes result and returns object
                                     return result.map((row, rowMetadata) -> new Post(
                                             row.get("id", Long.class),
-                                            row.get("body", String.class),
                                             row.get("title", String.class),
+                                            row.get("body", String.class),
                                             new HashSet<>(Arrays.asList(row.get("keywords", String[].class)))
                                     ));
                                 }))

@@ -5,7 +5,7 @@ import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.test.db.DatabaseFixture;
 import io.r2dbc.client.R2dbc;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -17,11 +17,11 @@ import java.util.Set;
 @Testcontainers
 class PostDaoTest {
 
-    private R2dbc r2dbc;
+    private static R2dbc r2dbc;
 
-    @BeforeEach
-    void setUp() {
-        this.r2dbc = new DatabaseFixture().startAndSchemaDatabase();
+    @BeforeAll
+    static void beforeAll() {
+        r2dbc = new DatabaseFixture().startAndSchemaDatabase();
     }
 
     @Nested
@@ -34,7 +34,7 @@ class PostDaoTest {
             StepVerifier.create(postMono)
                     .expectNextMatches(post -> {
                         Assertions.assertNotNull(post);
-                        Assertions.assertEquals(1, post.getId());
+                        Assertions.assertEquals(1L, post.getId());
                         Assertions.assertEquals("a new moon is rising", post.getTitle());
                         Assertions.assertEquals(Set.of("technology"), post.getKeywords());
                         return true;
@@ -58,15 +58,17 @@ class PostDaoTest {
         @Test
         void givenPost_insert_shouldInsertPost() {
             PostDao postDao = new PostDao(r2dbc);
-            Post post = new Post(null, "test", "test", Set.of("test"));
+            Post expectedPost = new Post(null, "test title", "test body", Set.of("keyword"));
 
-            Mono<Long> id = postDao.insert(post);
+            Mono<Long> id = postDao.insert(expectedPost);
 
-            Post expectedPost = id.map(post::withId).block();
-            Mono<Post> actualPost = id.flatMap(postDao::get);
+            Mono<Post> actualPost = Mono.from(id).flatMap(postDao::get);
 
             StepVerifier.create(actualPost)
-                    .expectNext(expectedPost)
+                    .expectNextMatches(p -> {
+                        Assertions.assertNotNull(p.getId(), "id should auto generate");
+                        return expectedPost.withId(p.getId()).equals(p);
+                    })
                     .expectComplete()
                     .verify();
         }
@@ -74,7 +76,7 @@ class PostDaoTest {
         @Test
         void givenPostWithNonNullId_insert_shouldInsertPostIgnoringTheId() {
             PostDao postDao = new PostDao(r2dbc);
-            Post expectedPost = new Post(4L, "test", "test", Set.of("test"));
+            Post expectedPost = new Post(4L, "test title", "test body", Set.of("keyword"));
 
             Mono<Post> actualPost = postDao.insert(expectedPost)
                     .flatMap(postDao::get); // why not
@@ -111,7 +113,7 @@ class PostDaoTest {
         void givenNonExistingPost_update_shouldFail() {
             PostDao postDao = new PostDao(r2dbc);
 
-            Post post = new Post(3L, "bla", "bla", Set.of("java"));
+            Post post = new Post(99L, "test title", "test body", Set.of("java"));
 
             Mono<Void> actual = postDao.update(post);
 
@@ -128,8 +130,12 @@ class PostDaoTest {
         void givenExistingPost_delete_shouldDelete() {
             PostDao postDao = new PostDao(r2dbc);
 
-            Mono<Post> actualPost = postDao.delete(1L)
-                    .then(postDao.get(1L));
+            Post post = new Post(null, "test title", "test body", Set.of("test"));
+
+            // insert a post then remove it
+            Mono<Post> actualPost = postDao.insert(post).flatMap(
+                    id -> postDao.delete(id).then(postDao.get(id))
+            );
 
             StepVerifier.create(actualPost)
                     .verifyComplete();
@@ -139,8 +145,8 @@ class PostDaoTest {
         void givenNonExistingPost_delete_shouldDoNothing() {
             PostDao postDao = new PostDao(r2dbc);
 
-            Mono<Post> actualPost = postDao.delete(2L)
-                    .then(postDao.get(2L));
+            Mono<Post> actualPost = postDao.delete(99L)
+                    .then(postDao.get(99L));
 
             StepVerifier.create(actualPost)
                     .verifyComplete();
