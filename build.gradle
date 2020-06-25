@@ -42,6 +42,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
     testImplementation "org.testcontainers:junit-jupiter:1.14.3"
     testImplementation "io.projectreactor:reactor-test:3.2.3.RELEASE"
+    testImplementation "org.mockito:mockito-core:3.3.3"
     testCompile "org.testcontainers:postgresql:1.14.3"
     testCompile "org.testcontainers:r2dbc:1.14.3"
 }

@@ -2,6 +2,7 @@ package io.github.aboodz.summer.blog;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import io.github.aboodz.summer.blog.api.BlogApiModule;
 import io.github.aboodz.summer.blog.api.BlogHandler;
 import io.github.aboodz.summer.blog.api.BlogRoutes;
 import io.github.aboodz.summer.db.DatabaseModule;
@@ -15,11 +16,8 @@ public class BlogApplicationModule extends AbstractModule {
     protected void configure() {
         install(new ServerModule());
         install(new DatabaseModule());
+        install(new BlogApiModule());
     }
 
-    @ProvidesIntoSet
-    public Routable blogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
-        return new BlogRoutes(blogHandler, resolver);
-    }
 
 }

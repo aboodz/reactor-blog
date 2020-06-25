@@ -13,18 +13,21 @@ import javax.inject.Singleton;
 @Log4j2
 public class BlogRoutes implements Routable {
 
+    public static final String POST_PATH = "/post";
+    public static final String POST_RESOURCE_PATH = POST_PATH + "/{id}";
+
     private final BlogHandler blogHandler;
     private final HandlerResolver resolver;
 
     @Inject
-    public BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
+    BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
         this.blogHandler = blogHandler;
         this.resolver = resolver;
     }
 
     @Override
     public void defineRoutes(HttpServerRoutes routes) {
-        routes.get("/blog/{id}", resolver.resolveMono(blogHandler::getBlog));
+        routes.get(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::getBlog));
         routes.post("/blog/{id}", resolver.resolveMono(blogHandler::getBlog));
     }
 
