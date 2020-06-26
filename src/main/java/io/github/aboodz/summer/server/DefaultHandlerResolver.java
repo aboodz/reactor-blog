@@ -1,15 +1,12 @@
 package io.github.aboodz.summer.server;
 
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonWriter;
 import io.github.aboodz.summer.server.exceptions.ErrorResponse;
 import io.github.aboodz.summer.server.exceptions.ManagedHandlerException;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpStatusClass;
 import lombok.extern.log4j.Log4j2;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
@@ -17,8 +14,6 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -46,6 +41,12 @@ public class DefaultHandlerResolver implements HandlerResolver {
                 .onErrorResume(ManagedHandlerException.class, e -> {
                     response.status(e.getStatus());
                     ErrorResponse errorResponse = e.toErrorResponse();
+                    return response.sendString(Mono.just(gson.toJson(errorResponse)));
+                })
+                .onErrorResume(RuntimeException.class, e -> {
+                    log.error(e);
+                    HttpResponseStatus internalServerError = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+                    ErrorResponse errorResponse = new ErrorResponse(internalServerError.code(), internalServerError.reasonPhrase(), "Something went wrong");
                     return response.sendString(Mono.just(gson.toJson(errorResponse)));
                 });
     }

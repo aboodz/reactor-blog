@@ -17,8 +17,8 @@ public final class AssertHttpResponse {
         this.gson = gson;
     }
 
-    public Consumer<Tuple2<HttpClientResponse, String>> assertHttpResponseEquals(HttpResponseStatus status) {
-        return response -> assertEquals(status, response.getT1().status());
+    public Consumer<HttpClientResponse> assertHttpResponseEquals(HttpResponseStatus status) {
+        return response -> assertEquals(status, response.status());
     }
 
     public <T> Consumer<Tuple2<HttpClientResponse, String>> assertHttpResponseEquals(HttpResponseStatus status, T expected, Class<T> clazz) {

@@ -26,13 +26,13 @@ import reactor.util.function.Tuple2;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class BlogHandlerTest {
 
     public static final Long VALID_POST_ID = 1L;
+    public static final Long INVALID_POST_ID = 2L;
     public static final Post post = new Post(VALID_POST_ID, "test title", "test body", Set.of("keyword"));
 
     static PostDao postDao;
@@ -64,6 +64,7 @@ class BlogHandlerTest {
         client = serverFixture.createTestingClient(server);
 
         when(postDao.get(VALID_POST_ID)).thenReturn(Mono.just(post));
+        when(postDao.get(INVALID_POST_ID)).thenReturn(Mono.empty());
     }
 
     @Test
@@ -73,23 +74,34 @@ class BlogHandlerTest {
                 .responseSingle((httpClientResponse, byteBufMono) -> Mono.zip(Mono.just(httpClientResponse), byteBufMono.asString()));
 
         StepVerifier.create(response)
-                .assertNext(r -> assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.OK, post, Post.class))
+                .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.OK, post, Post.class))
                 .verifyComplete();
     }
 
     @Test
-    void givenInvalidIdOfExistingPost_getPost_shouldReturnPost() {
+    void givenInvalidIdOfExistingPost_getPost_shouldError400() {
         Mono<Tuple2<HttpClientResponse, String>> response = client.get()
                 .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", "wrong"))
                 .responseSingle((httpClientResponse, byteBufMono) -> Mono.zip(Mono.just(httpClientResponse), byteBufMono.asString()));
 
+        ErrorResponse errorResponse = new InvalidIdFormatException().toErrorResponse();
         StepVerifier.create(response)
-                .assertNext(r -> {
-                    InvalidIdFormatException invalidIdFormatException = new InvalidIdFormatException();
-                    assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST, invalidIdFormatException, InvalidIdFormatException.class);
-                })
+                .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST, errorResponse, ErrorResponse.class))
                 .verifyComplete();
     }
+
+
+    @Test
+    void givenValidOfNonExistingPost_getPost_shouldError404() {
+        Mono<HttpClientResponse> response = client.get()
+                .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", INVALID_POST_ID.toString()))
+                .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+
+        StepVerifier.create(response)
+                .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NOT_FOUND))
+                .verifyComplete();
+    }
+
 
     @AfterAll
     static void afterAll() {

@@ -14,6 +14,7 @@ import javax.inject.Singleton;
 
 import java.util.Optional;
 
+import static io.github.aboodz.summer.server.HandlerFunction.notFound;
 import static io.github.aboodz.summer.server.HandlerFunction.ok;
 
 @Singleton
@@ -34,7 +35,8 @@ public class BlogHandler {
                 .orElseThrow(InvalidIdFormatException::new);
 
         return postDao.get(id)
-                .map(post -> ok().body(writer.write(post, Post.class)));
+                .map(post -> ok().body(writer.write(post, Post.class)))
+                .defaultIfEmpty(notFound());
     }
 
     public HandlerFunction postBlog(HttpServerRequest httpServerRequest) {
