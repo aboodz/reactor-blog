@@ -5,9 +5,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import io.github.aboodz.summer.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.summer.blog.dao.PostDao;
 import io.github.aboodz.summer.blog.domain.Post;
+import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.ServerModule;
+import io.github.aboodz.summer.server.exceptions.ErrorResponse;
 import io.github.aboodz.summer.test.assertions.AssertHttpResponse;
 import io.github.aboodz.summer.test.server.ServerFixture;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -53,10 +56,11 @@ class BlogHandlerTest {
         BlogRoutes blogRoutes = injector.getInstance(BlogRoutes.class);
         postDao = injector.getInstance(PostDao.class);
         gson = injector.getInstance(Gson.class);
+        HandlerResolver resolver = injector.getInstance(HandlerResolver.class);
 
         assertHttpResponse = new AssertHttpResponse(gson);
 
-        server = serverFixture.createTestingServer(blogRoutes);
+        server = serverFixture.createTestingServer(blogRoutes, resolver);
         client = serverFixture.createTestingClient(server);
 
         when(postDao.get(VALID_POST_ID)).thenReturn(Mono.just(post));
@@ -73,6 +77,19 @@ class BlogHandlerTest {
                 .verifyComplete();
     }
 
+    @Test
+    void givenInvalidIdOfExistingPost_getPost_shouldReturnPost() {
+        Mono<Tuple2<HttpClientResponse, String>> response = client.get()
+                .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", "wrong"))
+                .responseSingle((httpClientResponse, byteBufMono) -> Mono.zip(Mono.just(httpClientResponse), byteBufMono.asString()));
+
+        StepVerifier.create(response)
+                .assertNext(r -> {
+                    InvalidIdFormatException invalidIdFormatException = new InvalidIdFormatException();
+                    assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST, invalidIdFormatException, InvalidIdFormatException.class);
+                })
+                .verifyComplete();
+    }
 
     @AfterAll
     static void afterAll() {

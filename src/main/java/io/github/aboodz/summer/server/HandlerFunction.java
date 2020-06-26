@@ -10,30 +10,30 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.function.Function;
 
-public class HandlerResult implements Function<HttpServerResponse, Publisher<Void>> {
+public class HandlerFunction implements Function<HttpServerResponse, Publisher<Void>> {
 
     protected HttpResponseStatus status;
     protected Multimap<String, String> headers = LinkedHashMultimap.create();
     protected WriterFunction writerFunction;
 
-    HandlerResult(HttpResponseStatus status) {
+    HandlerFunction(HttpResponseStatus status) {
         this.status = status;
     }
 
-    public static HandlerResult ok() {
+    public static HandlerFunction ok() {
         return status(HttpResponseStatus.OK);
     }
 
-    public static HandlerResult status(HttpResponseStatus status) {
-        return new HandlerResult(status);
+    public static HandlerFunction status(HttpResponseStatus status) {
+        return new HandlerFunction(status);
     }
 
-    public HandlerResult header(String header, String value) {
+    public HandlerFunction header(String header, String value) {
         headers.put(header, value);
         return this;
     }
 
-    public HandlerResult body(WriterFunction writerFunction) {
+    public HandlerFunction body(WriterFunction writerFunction) {
         this.writerFunction = writerFunction;
         return this;
     }

@@ -2,7 +2,6 @@ package io.github.aboodz.summer.test.assertions;
 
 import com.google.gson.Gson;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.util.function.Tuple2;
 
@@ -18,9 +17,13 @@ public final class AssertHttpResponse {
         this.gson = gson;
     }
 
+    public Consumer<Tuple2<HttpClientResponse, String>> assertHttpResponseEquals(HttpResponseStatus status) {
+        return response -> assertEquals(status, response.getT1().status());
+    }
+
     public <T> Consumer<Tuple2<HttpClientResponse, String>> assertHttpResponseEquals(HttpResponseStatus status, T expected, Class<T> clazz) {
         return response -> {
-            assertEquals(HttpResponseStatus.OK, response.getT1().status());
+            assertEquals(status, response.getT1().status());
 
             T responseBody = gson.fromJson(response.getT2(), clazz);
             assertEquals(expected, responseBody);

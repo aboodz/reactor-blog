@@ -17,16 +17,14 @@ public class BlogRoutes implements Routable {
     public static final String POST_RESOURCE_PATH = POST_PATH + "/{id}";
 
     private final BlogHandler blogHandler;
-    private final HandlerResolver resolver;
 
     @Inject
-    BlogRoutes(BlogHandler blogHandler, HandlerResolver resolver) {
+    BlogRoutes(BlogHandler blogHandler) {
         this.blogHandler = blogHandler;
-        this.resolver = resolver;
     }
 
     @Override
-    public void defineRoutes(HttpServerRoutes routes) {
+    public void defineRoutes(HttpServerRoutes routes, HandlerResolver resolver) {
         routes.get(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::getBlog));
         routes.post("/blog/{id}", resolver.resolveMono(blogHandler::getBlog));
     }

@@ -1,5 +1,6 @@
 package io.github.aboodz.summer.test.server;
 
+import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.Routable;
 
 import reactor.netty.DisposableServer;
@@ -9,10 +10,10 @@ import reactor.netty.http.server.HttpServer;
 
 public class ServerFixture {
 
-    public DisposableServer createTestingServer(Routable routable) {
+    public DisposableServer createTestingServer(Routable routable, HandlerResolver resolver) {
         return HttpServer.create()
                 .port(0)
-                .route(routable::defineRoutes)
+                .route(r -> routable.defineRoutes(r, resolver))
                 .wiretap(true)
                 .bindNow();
     }

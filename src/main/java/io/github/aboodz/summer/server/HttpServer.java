@@ -15,9 +15,9 @@ public class HttpServer {
     private final reactor.netty.http.server.HttpServer reactorServer;
 
     @Inject
-    HttpServer(ServerConfiguration serverConfiguration, Set<Routable> routable) {
+    HttpServer(ServerConfiguration serverConfiguration, HandlerResolver handlerResolver, Set<Routable> routable) {
         this.reactorServer = reactor.netty.http.server.HttpServer.create()
-                .route(routes -> routable.forEach(r -> r.defineRoutes(routes)))
+                .route(routes -> routable.forEach(r -> r.defineRoutes(routes, handlerResolver)))
                 .port(serverConfiguration.getPort());
     }
 
