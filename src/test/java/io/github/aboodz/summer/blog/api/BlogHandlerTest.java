@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.github.aboodz.summer.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.summer.blog.dao.PostDao;
+import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.server.HandlerResolver;
 import io.github.aboodz.summer.server.ServerModule;
@@ -72,6 +73,8 @@ class BlogHandlerTest {
         when(postDao.get(NON_EXISTING_POST_ID)).thenReturn(Mono.empty());
         when(postDao.insert(any(Post.class))).thenReturn(Mono.just(ADDED_POST_ID));
         when(postDao.update(any(Post.class))).thenReturn(Mono.empty());
+        when(postDao.delete(EXISTING_POST_ID)).thenReturn(Mono.empty());
+        when(postDao.delete(NON_EXISTING_POST_ID)).thenReturn(Mono.error(EntityNotFoundException::new));
     }
 
     @Nested
@@ -139,12 +142,12 @@ class BlogHandlerTest {
     class UpdatePost {
 
         @Test
-        void givenValidPostDetails_updateBlog_shouldUpdate() {
+        void givenValidPostDetails_updateBlog_204() {
             String newPostJson = "{\"title\":\"updated title\",\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}";
             Mono<HttpClientResponse> response = client.put()
                     .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", EXISTING_POST_ID.toString()))
                     .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
-                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+                    .response();
 
             StepVerifier.create(response)
                     .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NO_CONTENT))
@@ -157,7 +160,7 @@ class BlogHandlerTest {
             Mono<HttpClientResponse> response = client.put()
                     .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", NON_EXISTING_POST_ID.toString()))
                     .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
-                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+                    .response();
 
             StepVerifier.create(response)
                     .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NOT_FOUND))
@@ -170,10 +173,37 @@ class BlogHandlerTest {
             Mono<HttpClientResponse> response = client.put()
                     .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", "wrong"))
                     .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
-                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+                    .response();
 
             StepVerifier.create(response)
                     .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST))
+                    .verifyComplete();
+        }
+
+    }
+
+    @Nested
+    class DeletePost {
+
+        @Test
+        void givenExistingId_deleteBlog_should204() {
+            Mono<HttpClientResponse> response = client.delete()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", EXISTING_POST_ID.toString()))
+                    .response();
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.OK))
+                    .verifyComplete();
+        }
+
+        @Test
+        void givenNonExistingId_deleteBlog_should404() {
+            Mono<HttpClientResponse> response = client.delete()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", NON_EXISTING_POST_ID.toString()))
+                    .response();
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NOT_FOUND))
                     .verifyComplete();
         }
 

@@ -3,6 +3,7 @@ package io.github.aboodz.summer.blog.api;
 import com.google.common.primitives.Longs;
 import io.github.aboodz.summer.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.summer.blog.dao.PostDao;
+import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.server.HandlerFunction;
 import io.github.aboodz.summer.server.serdes.ObjectWriter;
@@ -31,10 +32,14 @@ public class BlogHandler {
         this.postDao = postDao;
     }
 
-    public Mono<HandlerFunction> getBlog(HttpServerRequest httpServerRequest) {
-        Long id = Optional.ofNullable(httpServerRequest.param("id"))
+    private Long getBlogIdFromRequest(HttpServerRequest httpServerRequest) {
+        return Optional.ofNullable(httpServerRequest.param("id"))
                 .flatMap(stringId -> Optional.ofNullable(Longs.tryParse(stringId)))
                 .orElseThrow(InvalidIdFormatException::new);
+    }
+
+    public Mono<HandlerFunction> getBlog(HttpServerRequest httpServerRequest) {
+        Long id = getBlogIdFromRequest(httpServerRequest);
 
         return postDao.get(id)
                 .map(post -> ok().body(writer.write(post, Post.class)))
@@ -48,9 +53,7 @@ public class BlogHandler {
     }
 
     public Mono<HandlerFunction> updateBlog(HttpServerRequest httpServerRequest) {
-        Long id = Optional.ofNullable(httpServerRequest.param("id"))
-                .flatMap(stringId -> Optional.ofNullable(Longs.tryParse(stringId)))
-                .orElseThrow(InvalidIdFormatException::new);
+        Long id = getBlogIdFromRequest(httpServerRequest);
 
         return Mono.zip(postDao.get(id), reader.readObject(httpServerRequest, Post.class))
                 .map(postAndUpdateModel -> {
@@ -61,6 +64,14 @@ public class BlogHandler {
                 .flatMap(post -> postDao.update(post).thenReturn(true))
                 .map(result -> noContent())
                 .defaultIfEmpty(notFound());
+    }
+
+    public Mono<HandlerFunction> deleteBlog(HttpServerRequest httpServerRequest) {
+        Long id = getBlogIdFromRequest(httpServerRequest);
+
+        return postDao.delete(id)
+                .thenReturn(ok())
+                .onErrorReturn(EntityNotFoundException.class, notFound());
     }
 
 

@@ -25,9 +25,10 @@ public class BlogRoutes implements Routable {
 
     @Override
     public void defineRoutes(HttpServerRoutes routes, HandlerResolver resolver) {
-        routes.get(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::getBlog));
         routes.post(POST_PATH, resolver.resolveMono(blogHandler::createBlog));
+        routes.get(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::getBlog));
         routes.put(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::updateBlog));
+        routes.delete(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::deleteBlog));
     }
 
 }
