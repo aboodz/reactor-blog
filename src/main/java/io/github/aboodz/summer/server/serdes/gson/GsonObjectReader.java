@@ -1,7 +1,8 @@
-package io.github.aboodz.summer.server.serdes;
+package io.github.aboodz.summer.server.serdes.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import io.github.aboodz.summer.server.serdes.ObjectReader;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 

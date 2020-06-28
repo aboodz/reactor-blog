@@ -1,4 +1,4 @@
-package io.github.aboodz.summer.server.serdes;
+package io.github.aboodz.summer.server.serdes.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

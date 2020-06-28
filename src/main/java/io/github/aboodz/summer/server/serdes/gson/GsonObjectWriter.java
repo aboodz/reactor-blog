@@ -1,23 +1,23 @@
-package io.github.aboodz.summer.server.serdes;
+package io.github.aboodz.summer.server.serdes.gson;
 
 import com.google.common.net.MediaType;
 import com.google.gson.Gson;
+import io.github.aboodz.summer.server.serdes.ObjectWriter;
+import io.github.aboodz.summer.server.serdes.WriterFunction;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import javax.inject.Inject;
 import java.io.Serializable;
-import java.lang.reflect.Type;
 
-public class GsonResultWriter implements ResultWriter {
+public class GsonObjectWriter implements ObjectWriter {
 
     private final Gson gson;
 
     @Inject
-    GsonResultWriter(Gson gson) {
+    GsonObjectWriter(Gson gson) {
         this.gson = gson;
     }
-
 
     @Override
     public <T extends Serializable> WriterFunction write(T obj) {
