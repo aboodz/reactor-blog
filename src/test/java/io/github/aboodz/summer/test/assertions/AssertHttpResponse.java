@@ -1,9 +1,6 @@
 package io.github.aboodz.summer.test.assertions;
 
-import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import reactor.netty.http.client.HttpClientResponse;
@@ -11,7 +8,8 @@ import reactor.util.function.Tuple2;
 
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class AssertHttpResponse {
 

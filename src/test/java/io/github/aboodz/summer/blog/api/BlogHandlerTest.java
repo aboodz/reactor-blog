@@ -35,10 +35,10 @@ import static org.mockito.Mockito.when;
 
 class BlogHandlerTest {
 
-    public static final Long VALID_POST_ID = 1L;
-    public static final Long INVALID_POST_ID = 2L;
+    public static final Long EXISTING_POST_ID = 1L;
+    public static final Long NON_EXISTING_POST_ID = 2L;
     public static final Long ADDED_POST_ID = 3L;
-    public static final Post post = new Post(VALID_POST_ID, "test title", "test body", Set.of("keyword"));
+    public static final Post post = new Post(EXISTING_POST_ID, "test title", "test body", Set.of("keyword"));
 
     static PostDao postDao;
     static DisposableServer server;
@@ -68,9 +68,10 @@ class BlogHandlerTest {
         server = serverFixture.createTestingServer(blogRoutes, resolver);
         client = serverFixture.createTestingClient(server);
 
-        when(postDao.get(VALID_POST_ID)).thenReturn(Mono.just(post));
-        when(postDao.get(INVALID_POST_ID)).thenReturn(Mono.empty());
+        when(postDao.get(EXISTING_POST_ID)).thenReturn(Mono.just(post));
+        when(postDao.get(NON_EXISTING_POST_ID)).thenReturn(Mono.empty());
         when(postDao.insert(any(Post.class))).thenReturn(Mono.just(ADDED_POST_ID));
+        when(postDao.update(any(Post.class))).thenReturn(Mono.empty());
     }
 
     @Nested
@@ -79,7 +80,7 @@ class BlogHandlerTest {
         @Test
         void givenValidIdOfExistingPost_getPost_shouldReturnPost() {
             Mono<Tuple2<HttpClientResponse, String>> response = client.get()
-                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", VALID_POST_ID.toString()))
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", EXISTING_POST_ID.toString()))
                     .responseSingle((httpClientResponse, byteBufMono) -> Mono.zip(Mono.just(httpClientResponse), byteBufMono.asString()));
 
             StepVerifier.create(response)
@@ -103,7 +104,7 @@ class BlogHandlerTest {
         @Test
         void givenValidOfNonExistingPost_getPost_shouldError404() {
             Mono<HttpClientResponse> response = client.get()
-                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", INVALID_POST_ID.toString()))
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", NON_EXISTING_POST_ID.toString()))
                     .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
 
             StepVerifier.create(response)
@@ -131,6 +132,52 @@ class BlogHandlerTest {
                     ))
                     .verifyComplete();
         }
+
+    }
+
+    @Nested
+    class UpdatePost {
+
+        @Test
+        void givenValidPostDetails_updateBlog_shouldUpdate() {
+            String newPostJson = "{\"title\":\"updated title\",\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}";
+            Mono<HttpClientResponse> response = client.put()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", EXISTING_POST_ID.toString()))
+                    .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
+                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NO_CONTENT))
+                    .verifyComplete();
+        }
+
+        @Test
+        void givenNonExistingPostId_updateBlog_shouldFail404() {
+            String newPostJson = "{\"title\":\"updated title\",\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}";
+            Mono<HttpClientResponse> response = client.put()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", NON_EXISTING_POST_ID.toString()))
+                    .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
+                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NOT_FOUND))
+                    .verifyComplete();
+        }
+
+        @Test
+        void givenInvalidId_updateBlog_shouldFail400() {
+            String newPostJson = "{\"title\":\"updated title\",\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}";
+            Mono<HttpClientResponse> response = client.put()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", "wrong"))
+                    .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
+                    .responseSingle((httpClientResponse, byteBufMono) -> Mono.just(httpClientResponse));
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST))
+                    .verifyComplete();
+        }
+
+
 
     }
 

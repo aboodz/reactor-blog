@@ -47,8 +47,20 @@ public class BlogHandler {
                 .map(id -> created(POST_RESOURCE_PATH.replace("{id}", id.toString())));
     }
 
-    public HandlerFunction updateBlog(HttpServerRequest httpServerRequest) {
-        throw new UnsupportedOperationException();
+    public Mono<HandlerFunction> updateBlog(HttpServerRequest httpServerRequest) {
+        Long id = Optional.ofNullable(httpServerRequest.param("id"))
+                .flatMap(stringId -> Optional.ofNullable(Longs.tryParse(stringId)))
+                .orElseThrow(InvalidIdFormatException::new);
+
+        return Mono.zip(postDao.get(id), reader.readObject(httpServerRequest, Post.class))
+                .map(postAndUpdateModel -> {
+                    Post oldPost = postAndUpdateModel.getT1();
+                    return postAndUpdateModel.getT2()
+                            .withId(oldPost.getId());
+                })
+                .flatMap(post -> postDao.update(post).thenReturn(true))
+                .map(result -> noContent())
+                .defaultIfEmpty(notFound());
     }
 
 

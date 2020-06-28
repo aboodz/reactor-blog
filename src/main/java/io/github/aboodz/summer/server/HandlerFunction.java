@@ -49,6 +49,10 @@ public class HandlerFunction implements Function<HttpServerResponse, Publisher<V
         return handlerFunction;
     }
 
+    public static HandlerFunction noContent() {
+        return status(HttpResponseStatus.NO_CONTENT);
+    }
+
     public static HandlerFunction notFound() {
         return status(HttpResponseStatus.NOT_FOUND);
     }

@@ -27,6 +27,7 @@ public class BlogRoutes implements Routable {
     public void defineRoutes(HttpServerRoutes routes, HandlerResolver resolver) {
         routes.get(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::getBlog));
         routes.post(POST_PATH, resolver.resolveMono(blogHandler::createBlog));
+        routes.put(POST_RESOURCE_PATH, resolver.resolveMono(blogHandler::updateBlog));
     }
 
 }
