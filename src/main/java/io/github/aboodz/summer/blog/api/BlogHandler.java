@@ -1,31 +1,35 @@
 package io.github.aboodz.summer.blog.api;
 
 import com.google.common.primitives.Longs;
+import com.google.gson.stream.JsonReader;
 import io.github.aboodz.summer.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.summer.blog.dao.PostDao;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.server.HandlerFunction;
 import io.github.aboodz.summer.server.serdes.GsonResultWriter;
+import io.github.aboodz.summer.server.serdes.ObjectReader;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
+import java.io.InputStreamReader;
 import java.util.Optional;
 
-import static io.github.aboodz.summer.server.HandlerFunction.notFound;
-import static io.github.aboodz.summer.server.HandlerFunction.ok;
+import static io.github.aboodz.summer.blog.api.BlogRoutes.POST_RESOURCE_PATH;
+import static io.github.aboodz.summer.server.HandlerFunction.*;
 
 @Singleton
 public class BlogHandler {
 
     private final GsonResultWriter writer;
+    private final ObjectReader reader;
     private final PostDao postDao;
 
     @Inject
-    BlogHandler(GsonResultWriter writer, PostDao postDao) {
+    BlogHandler(GsonResultWriter writer, ObjectReader reader, PostDao postDao) {
         this.writer = writer;
+        this.reader = reader;
         this.postDao = postDao;
     }
 
@@ -39,8 +43,10 @@ public class BlogHandler {
                 .defaultIfEmpty(notFound());
     }
 
-    public HandlerFunction postBlog(HttpServerRequest httpServerRequest) {
-        throw new UnsupportedOperationException();
+    public Mono<HandlerFunction> createBlog(HttpServerRequest httpServerRequest) {
+        return reader.readObject(httpServerRequest, Post.class)
+                .flatMap(postDao::insert)
+                .map(id -> created(POST_RESOURCE_PATH.replace("{id}", id.toString())));
     }
 
     public HandlerFunction updateBlog(HttpServerRequest httpServerRequest) {

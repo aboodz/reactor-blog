@@ -45,8 +45,8 @@ public class DefaultHandlerResolver implements HandlerResolver {
                 })
                 .onErrorResume(RuntimeException.class, e -> {
                     log.error(e);
-                    HttpResponseStatus internalServerError = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-                    ErrorResponse errorResponse = new ErrorResponse(internalServerError.code(), internalServerError.reasonPhrase(), "Something went wrong");
+                    ErrorResponse errorResponse = ErrorResponse.technicalError(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                    response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                     return response.sendString(Mono.just(gson.toJson(errorResponse)));
                 });
     }

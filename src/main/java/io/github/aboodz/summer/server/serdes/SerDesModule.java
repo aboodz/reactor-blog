@@ -8,5 +8,6 @@ public class SerDesModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Gson.class).toProvider(GsonSerdesProvider.class);
+        bind(ObjectReader.class).to(GsonObjectReader.class);
     }
 }

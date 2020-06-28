@@ -6,10 +6,12 @@ import com.google.common.net.MediaType;
 import io.github.aboodz.summer.server.serdes.WriterFunction;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import lombok.SneakyThrows;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerResponse;
 
+import java.net.URI;
 import java.util.function.Function;
 
 public class HandlerFunction implements Function<HttpServerResponse, Publisher<Void>> {
@@ -34,6 +36,17 @@ public class HandlerFunction implements Function<HttpServerResponse, Publisher<V
 
     public static HandlerFunction ok() {
         return status(HttpResponseStatus.OK);
+    }
+
+    @SneakyThrows
+    public static HandlerFunction created(String location) {
+        return created(new URI(location));
+    }
+
+    public static HandlerFunction created(URI location) {
+        HandlerFunction handlerFunction = status(HttpResponseStatus.CREATED);
+        handlerFunction.headers.put(HttpHeaderNames.LOCATION.toString(), location.toString());
+        return handlerFunction;
     }
 
     public static HandlerFunction notFound() {
