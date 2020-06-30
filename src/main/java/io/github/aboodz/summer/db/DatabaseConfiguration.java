@@ -1,6 +1,5 @@
 package io.github.aboodz.summer.db;
 
-import io.github.aboodz.summer.server.ServerConfiguration;
 import lombok.Getter;
 import lombok.SneakyThrows;
 

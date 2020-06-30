@@ -2,8 +2,8 @@ package io.github.aboodz.summer.blog.dao;
 
 import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.domain.Post;
+import io.github.aboodz.summer.db.DatabaseClient;
 import io.github.aboodz.summer.test.db.DatabaseFixture;
-import io.r2dbc.client.R2dbc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -14,14 +14,16 @@ import reactor.test.StepVerifier;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @Testcontainers
 class PostDaoTest {
 
-    private static R2dbc r2dbc;
+    private static DatabaseClient databaseClient;
 
     @BeforeAll
     static void beforeAll() {
-        r2dbc = new DatabaseFixture().startAndSchemaDatabase();
+        databaseClient = new DatabaseFixture().startAndSchemaDatabase();
     }
 
     @Nested
@@ -29,23 +31,22 @@ class PostDaoTest {
 
         @Test
         void givenAnExistingItemId_get_shouldEmitTheEntity() {
-            Mono<Post> postMono = new PostDao(r2dbc).get(1L);
+            Mono<Post> postMono = new PostDao(databaseClient).get(1L);
 
             StepVerifier.create(postMono)
-                    .expectNextMatches(post -> {
-                        Assertions.assertNotNull(post);
-                        Assertions.assertEquals(1L, post.getId());
-                        Assertions.assertEquals("a new moon is rising", post.getTitle());
-                        Assertions.assertEquals(Set.of("technology"), post.getKeywords());
-                        return true;
+                    .assertNext(post -> {
+                        assertNotNull(post);
+                        assertEquals(1L, post.getId());
+                        assertEquals("a new moon is rising", post.getTitle());
+                        assertEquals(Set.of("technology"), post.getKeywords());
                     })
                     .expectComplete()
                     .verify();
         }
 
         @Test
-        void givenNonExistingItemId_get_shouldEmitError() {
-            Mono<Post> postMono = new PostDao(r2dbc).get(2L);
+        void givenNonExistingItemId_get_shouldComplete() {
+            Mono<Post> postMono = new PostDao(databaseClient).get(2L);
             StepVerifier.create(postMono)
                     .verifyComplete();
         }
@@ -57,7 +58,7 @@ class PostDaoTest {
 
         @Test
         void givenPost_insert_shouldInsertPost() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
             Post expectedPost = new Post(null, "test title", "test body", Set.of("keyword"));
 
             Mono<Long> id = postDao.insert(expectedPost);
@@ -65,9 +66,9 @@ class PostDaoTest {
             Mono<Post> actualPost = Mono.from(id).flatMap(postDao::get);
 
             StepVerifier.create(actualPost)
-                    .expectNextMatches(p -> {
-                        Assertions.assertNotNull(p.getId(), "id should auto generate");
-                        return expectedPost.withId(p.getId()).equals(p);
+                    .assertNext(p -> {
+                        assertNotNull(p.getId(), "id should auto generate");
+                        assertEquals(expectedPost.withId(p.getId()), p);
                     })
                     .expectComplete()
                     .verify();
@@ -75,11 +76,11 @@ class PostDaoTest {
 
         @Test
         void givenPostWithNonNullId_insert_shouldInsertPostIgnoringTheId() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
             Post expectedPost = new Post(4L, "test title", "test body", Set.of("keyword"));
 
             Mono<Post> actualPost = postDao.insert(expectedPost)
-                    .flatMap(postDao::get); // why not
+                    .flatMap(postDao::get);
 
             StepVerifier.create(actualPost)
                     .expectNextMatches(post -> expectedPost.withId(post.getId()).equals(post))
@@ -96,7 +97,7 @@ class PostDaoTest {
 
         @Test
         void givenExistingPost_update_shouldUpdateChangedFields() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
             Post updated = postDao.get(1L)
                     .block()
                     .withBody("changed body");
@@ -111,7 +112,7 @@ class PostDaoTest {
 
         @Test
         void givenNonExistingPost_update_shouldFail() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
 
             Post post = new Post(99L, "test title", "test body", Set.of("java"));
 
@@ -128,7 +129,7 @@ class PostDaoTest {
 
         @Test
         void givenExistingPost_delete_shouldDelete() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
 
             Post post = new Post(null, "test title", "test body", Set.of("test"));
 
@@ -143,13 +144,13 @@ class PostDaoTest {
 
         @Test
         void givenNonExistingPost_delete_shouldDoNothing() {
-            PostDao postDao = new PostDao(r2dbc);
+            PostDao postDao = new PostDao(databaseClient);
 
             Mono<Post> actualPost = postDao.delete(99L)
                     .then(postDao.get(99L));
 
             StepVerifier.create(actualPost)
-                    .verifyComplete();
+                    .verifyError(EntityNotFoundException.class);
         }
 
     }
