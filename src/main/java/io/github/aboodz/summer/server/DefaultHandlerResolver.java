@@ -44,7 +44,7 @@ public class DefaultHandlerResolver implements HandlerResolver {
                     return response.sendString(Mono.just(gson.toJson(errorResponse)));
                 })
                 .onErrorResume(RuntimeException.class, e -> {
-                    log.error(e);
+                    log.error("processing http request failed", e);
                     ErrorResponse errorResponse = ErrorResponse.technicalError(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                     response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                     return response.sendString(Mono.just(gson.toJson(errorResponse)));
