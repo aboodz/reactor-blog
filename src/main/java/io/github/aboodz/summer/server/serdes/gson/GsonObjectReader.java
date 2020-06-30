@@ -3,6 +3,8 @@ package io.github.aboodz.summer.server.serdes.gson;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import io.github.aboodz.summer.server.serdes.ObjectReader;
+import io.github.aboodz.summer.server.serdes.exceptions.RequiredHttpBodyException;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -10,6 +12,7 @@ import javax.inject.Inject;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
+@Log4j2
 public class GsonObjectReader implements ObjectReader {
 
     private final Gson gson;
@@ -28,6 +31,7 @@ public class GsonObjectReader implements ObjectReader {
                     JsonReader jsonReader = gson.newJsonReader(inputStreamReader);
                     return gson.<T>fromJson(jsonReader, clazz);
                 })
+                .switchIfEmpty(Mono.error(new RequiredHttpBodyException(clazz)))
                 .single();
     }
 }

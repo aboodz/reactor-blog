@@ -1,5 +1,6 @@
 package io.github.aboodz.summer.server;
 
+import com.google.common.base.VerifyException;
 import com.google.gson.Gson;
 import io.github.aboodz.summer.server.exceptions.ErrorResponse;
 import io.github.aboodz.summer.server.exceptions.ManagedHandlerException;
@@ -38,6 +39,7 @@ public class DefaultHandlerResolver implements HandlerResolver {
         return (request, response) -> Mono.fromSupplier(() -> handlerFunction.apply(request))
                 .flatMapMany(Flux::from)
                 .flatMap(f -> f.apply(response))
+                .onErrorMap(VerifyException.class, e -> new ManagedHandlerException(HttpResponseStatus.BAD_REQUEST, e.getMessage()))
                 .onErrorResume(ManagedHandlerException.class, e -> {
                     response.status(e.getStatus());
                     ErrorResponse errorResponse = e.toErrorResponse();

@@ -1,5 +1,6 @@
 package io.github.aboodz.summer.blog.api;
 
+import com.google.common.base.Verify;
 import com.google.common.primitives.Longs;
 import io.github.aboodz.summer.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.summer.blog.dao.PostDao;
@@ -14,6 +15,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static io.github.aboodz.summer.blog.api.BlogRoutes.POST_RESOURCE_PATH;
 import static io.github.aboodz.summer.server.HandlerFunction.*;
@@ -24,6 +26,11 @@ public class BlogHandler {
     private final ObjectWriter writer;
     private final ObjectReader reader;
     private final PostDao postDao;
+
+    private final Consumer<Post> validatePost = post -> {
+        Verify.verifyNotNull(post.getTitle());
+        Verify.verifyNotNull(post.getBody());
+    };
 
     @Inject
     BlogHandler(ObjectWriter writer, ObjectReader reader, PostDao postDao) {
@@ -48,6 +55,7 @@ public class BlogHandler {
 
     public Mono<HandlerFunction> createBlog(HttpServerRequest httpServerRequest) {
         return reader.readObject(httpServerRequest, Post.class)
+                .doOnNext(validatePost)
                 .flatMap(postDao::insert)
                 .map(id -> created(POST_RESOURCE_PATH.replace("{id}", id.toString())));
     }
@@ -55,11 +63,15 @@ public class BlogHandler {
     public Mono<HandlerFunction> updateBlog(HttpServerRequest httpServerRequest) {
         Long id = getBlogIdFromRequest(httpServerRequest);
 
-        return Mono.zip(postDao.get(id), reader.readObject(httpServerRequest, Post.class))
+        return reader.readObject(httpServerRequest, Post.class)
+                .doOnNext(validatePost)
+                .zipWith(postDao.get(id))
                 .map(postAndUpdateModel -> {
-                    Post oldPost = postAndUpdateModel.getT1();
-                    return postAndUpdateModel.getT2()
-                            .withId(oldPost.getId());
+                    Post currentPost = postAndUpdateModel.getT1();
+                    Post newPost = postAndUpdateModel.getT2();
+                    return currentPost.withTitle(newPost.getTitle())
+                            .withBody(newPost.getBody())
+                            .withKeywords(newPost.getKeywords());
                 })
                 .flatMap(post -> postDao.update(post).thenReturn(true))
                 .map(result -> noContent())

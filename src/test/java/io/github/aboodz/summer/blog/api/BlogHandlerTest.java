@@ -20,6 +20,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.DisposableServer;
@@ -136,6 +138,27 @@ class BlogHandlerTest {
                     .verifyComplete();
         }
 
+        @ParameterizedTest
+        @ValueSource(strings =
+                {
+                        "{\"title\":\"updated title\",\"keywords\":[\"another_keyword\"]}",
+                        "{\"title\":\"updated title\"}",
+                        "{\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}",
+                        "{\"body\":\"hello, I have updates\"}",
+                        "{\"keywords\":[\"another_keyword\"]}"
+                }
+        )
+        void givenInvalidJson_createBlog_shouldFail400(String newPostJson) {
+            Mono<HttpClientResponse> response = client.post()
+                    .uri(BlogRoutes.POST_PATH)
+                    .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
+                    .response();
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST))
+                    .verifyComplete();
+        }
+
     }
 
     @Nested
@@ -180,6 +203,27 @@ class BlogHandlerTest {
                     .verifyComplete();
         }
 
+        @ParameterizedTest
+        @ValueSource(strings =
+                {
+                        "{\"title\":\"updated title\",\"keywords\":[\"another_keyword\"]}",
+                        "{\"title\":\"updated title\"}",
+                        "{\"body\":\"hello, I have updates\",\"keywords\":[\"another_keyword\"]}",
+                        "{\"body\":\"hello, I have updates\"}",
+                        "{\"keywords\":[\"another_keyword\"]}"
+                }
+        )
+        void givenInvalidJson_updateBlog_shouldFail400(String newPostJson) {
+            Mono<HttpClientResponse> response = client.put()
+                    .uri(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", EXISTING_POST_ID.toString()))
+                    .send(ByteBufFlux.fromString(Mono.just(newPostJson)))
+                    .response();
+
+            StepVerifier.create(response)
+                    .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.BAD_REQUEST))
+                    .verifyComplete();
+        }
+
     }
 
     @Nested
@@ -206,7 +250,6 @@ class BlogHandlerTest {
                     .assertNext(assertHttpResponse.assertHttpResponseEquals(HttpResponseStatus.NOT_FOUND))
                     .verifyComplete();
         }
-
 
 
     }
