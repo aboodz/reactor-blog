@@ -4,7 +4,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.github.aboodz.summer.blog.BlogApplicationModule;
 import io.github.aboodz.summer.server.HttpServer;
-import io.github.aboodz.summer.server.ServerModule;
 
 public class SummerApplication {
 

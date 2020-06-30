@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import io.github.aboodz.summer.server.exceptions.ErrorResponse;
 import io.github.aboodz.summer.server.exceptions.ManagedHandlerException;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpStatusClass;
 import lombok.extern.log4j.Log4j2;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;

@@ -7,8 +7,8 @@ import io.github.aboodz.summer.blog.dao.PostDao;
 import io.github.aboodz.summer.blog.dao.exceptions.EntityNotFoundException;
 import io.github.aboodz.summer.blog.domain.Post;
 import io.github.aboodz.summer.server.HandlerFunction;
-import io.github.aboodz.summer.server.serdes.ObjectWriter;
 import io.github.aboodz.summer.server.serdes.ObjectReader;
+import io.github.aboodz.summer.server.serdes.ObjectWriter;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -67,8 +67,8 @@ public class BlogHandler {
                 .doOnNext(validatePost)
                 .zipWith(postDao.get(id))
                 .map(postAndUpdateModel -> {
-                    Post currentPost = postAndUpdateModel.getT1();
-                    Post newPost = postAndUpdateModel.getT2();
+                    Post currentPost = postAndUpdateModel.getT2();
+                    Post newPost = postAndUpdateModel.getT1();
                     return currentPost.withTitle(newPost.getTitle())
                             .withBody(newPost.getBody())
                             .withKeywords(newPost.getKeywords());

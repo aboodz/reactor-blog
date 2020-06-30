@@ -3,7 +3,6 @@ package io.github.aboodz.summer.server.serdes;
 import org.reactivestreams.Publisher;
 
 import java.io.Serializable;
-import java.lang.reflect.Type;
 
 public interface ObjectWriter {
 
