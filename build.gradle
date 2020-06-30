@@ -11,7 +11,7 @@ repositories {
 }
 
 application {
-    mainClassName 'io.github.aboodz.Application'
+    mainClassName 'io.github.aboodz.summer.SummerApplication'
 }
 
 dependencies {
