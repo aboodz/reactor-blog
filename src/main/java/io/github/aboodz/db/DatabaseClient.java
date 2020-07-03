@@ -28,12 +28,9 @@ public class DatabaseClient {
                     Mono<T> begin = Mono.fromDirect(connection.beginTransaction()).then(Mono.empty());
                     Mono<T> commit = Mono.fromDirect(connection.commitTransaction()).then(Mono.empty());
                     Function<Throwable, Publisher<T>> rollback = e -> Mono.fromDirect(connection.rollbackTransaction()).then(Mono.error(e));
-
-                    return Flux.concat(
-                            begin,
-                            transactions.apply(connection),
-                            commit
-                    ).onErrorResume(rollback);
+                    return Flux.concat(begin, transactions.apply(connection), commit)
+                            .onErrorResume(rollback)
+                            .doFinally(signalType -> connection.close());
                 });
     }
 
