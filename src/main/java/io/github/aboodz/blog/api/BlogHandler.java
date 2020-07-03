@@ -4,11 +4,11 @@ import com.google.common.base.Verify;
 import com.google.common.primitives.Longs;
 import io.github.aboodz.blog.api.exceptions.InvalidIdFormatException;
 import io.github.aboodz.blog.dao.PostDao;
-import io.github.aboodz.blog.domain.Post;
-import io.github.aboodz.server.HandlerFunction;
-import io.github.aboodz.server.serdes.ObjectWriter;
 import io.github.aboodz.blog.dao.exceptions.EntityNotFoundException;
+import io.github.aboodz.blog.domain.Post;
+import io.github.aboodz.server.HandlerResult;
 import io.github.aboodz.server.serdes.ObjectReader;
+import io.github.aboodz.server.serdes.ObjectWriter;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -42,22 +42,22 @@ public class BlogHandler {
                 .orElseThrow(InvalidIdFormatException::new);
     }
 
-    public Mono<HandlerFunction> getBlog(HttpServerRequest httpServerRequest) {
+    public Mono<HandlerResult> getBlog(HttpServerRequest httpServerRequest) {
         Long id = getBlogIdFromRequest(httpServerRequest);
 
         return postDao.get(id)
-                .map(post -> HandlerFunction.ok().body(writer.write(post, Post.class)))
-                .defaultIfEmpty(HandlerFunction.notFound());
+                .map(post -> HandlerResult.ok().body(writer.write(post, Post.class)))
+                .defaultIfEmpty(HandlerResult.notFound());
     }
 
-    public Mono<HandlerFunction> createBlog(HttpServerRequest httpServerRequest) {
+    public Mono<HandlerResult> createBlog(HttpServerRequest httpServerRequest) {
         return reader.readObject(httpServerRequest, Post.class)
                 .doOnNext(validatePost)
                 .flatMap(postDao::insert)
-                .map(id -> HandlerFunction.created(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", id.toString())));
+                .map(id -> HandlerResult.created(BlogRoutes.POST_RESOURCE_PATH.replace("{id}", id.toString())));
     }
 
-    public Mono<HandlerFunction> updateBlog(HttpServerRequest httpServerRequest) {
+    public Mono<HandlerResult> updateBlog(HttpServerRequest httpServerRequest) {
         Long id = getBlogIdFromRequest(httpServerRequest);
 
         return reader.readObject(httpServerRequest, Post.class)
@@ -71,16 +71,16 @@ public class BlogHandler {
                             .withKeywords(newPost.getKeywords());
                 })
                 .flatMap(post -> postDao.update(post).thenReturn(true))
-                .map(result -> HandlerFunction.noContent())
-                .defaultIfEmpty(HandlerFunction.notFound());
+                .map(result -> HandlerResult.noContent())
+                .defaultIfEmpty(HandlerResult.notFound());
     }
 
-    public Mono<HandlerFunction> deleteBlog(HttpServerRequest httpServerRequest) {
+    public Mono<HandlerResult> deleteBlog(HttpServerRequest httpServerRequest) {
         Long id = getBlogIdFromRequest(httpServerRequest);
 
         return postDao.delete(id)
-                .thenReturn(HandlerFunction.ok())
-                .onErrorReturn(EntityNotFoundException.class, HandlerFunction.notFound());
+                .thenReturn(HandlerResult.ok())
+                .onErrorReturn(EntityNotFoundException.class, HandlerResult.notFound());
     }
 
 
