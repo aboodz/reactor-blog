@@ -20,7 +20,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     // reactor
-    implementation 'io.projectreactor.netty:reactor-netty:0.9.8.RELEASE'
+    implementation 'io.projectreactor.netty:reactor-netty:0.9.9.RELEASE'
 
     // utils
     implementation 'com.google.guava:guava:29.0-jre'
@@ -40,7 +40,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.4.2"
     testImplementation "org.testcontainers:junit-jupiter:1.14.3"
-    testImplementation "io.projectreactor:reactor-test:3.2.3.RELEASE"
+    testImplementation "io.projectreactor:reactor-test:3.3.7.RELEASE"
     testImplementation "org.mockito:mockito-core:3.3.3"
     testCompile "org.testcontainers:postgresql:1.14.3"
     testCompile "org.testcontainers:r2dbc:1.14.3"
