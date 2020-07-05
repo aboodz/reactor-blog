@@ -1,0 +1,92 @@
+= Reactor based Service
+
+== Introduction
+
+In this experiment, I try to create a homegrown reactor-based framework and use it to create a reactive RESTful service without using any Spring Framework dependency.
+The service provides a reactive RESTful CRUD interface to store and retrieve blog posts.
+This experiment is built by gluing together several open source technologies, which are:
+
+* Reactor Netty, the backbone of this experiment, to provide an HTTP server.
+* Guice as a dependency injection container.
+* Gson to provide Serialization and Deserialization.
+* R2DBC for database connectivity.
+* JUnit5 for testing.
+
+NOTE: This was an experiment done for fun and learning purposes and should not be taken as a Spring alternative or used in production systems.
+
+== Running the application
+
+[source,shell script]
+----
+docker-compose up
+gradlew run
+----
+
+=== APIs (HTTPie)
+
+[source,shell script]
+----
+http get http://localhost:4500/post/1
+http post http://localhost:4500/post title='greeting' body='Hello World' keywords:='["greet", "welcome"]'
+http put http://localhost:4500/post/21 title='greeting' body='Hello World and Universe' keywords:='["greet", "welcome"]'
+http delete http://localhost:4500/post/21
+----
+
+== How it works
+
+The project consists of three main parts:
+
+=== The server part
+
+The first part, located inside the `server` package, consists of:
+An  `HttpServer`, a `HandlerResult`, and a `HandlerResolver`.
+The `HttpServer` is to wrap and configure a `reactor-netty` server.
+It reads the configuration from `server.properties`, and registers the `Routable` paths to the `reactor-netty` server.
+The `HandlerResult` is to provide static methods to create a blueprint for creating an HTTP response.
+Finally, the `HandlerResolver`, implemented by `DefaultHandlerResolver`, to transform the `HandlerResult` into a server response by execute `response.sendX()` in the `reactor-server`.
+
+==== Serialization and deserialization
+
+Serialization and deserialization utils are provided in the `serdes` package in form of `ObjectWriter` and `ObjectReader`.
+The utils can be used to convert objects into JSON and visa versa. `GsonModule` implements those interfaces using Gson.
+
+=== The database part
+
+The package `db` contains all the things required to create a database connection using R2dbc.
+Similar to the server configuration, it reads the database configuration from `database.properties`, and establishes a pooled connection to the database.
+The database and the application schema can be created by using a docker-compose.
+
+=== The application part
+
+This part implements RESTful handlers to manage blog posts.
+The routes are defined in `BlogRoutes` by implementing a `Routable` interface.
+Each route is bound to a handler function that processes its incoming request to produce a response.
+Handler functions for blog routes are defined in `BlogHandler`.
+Handler functions utilize the DAO to work with the database, the `ObjectReader` to deserialize request body, the `HandlerResult` to create the response, and `ObjectWriter` to serialize objects into the response body.
+The `HandlerResult` is passed to the `HandlerResolver` to be sent as an HTTP response.
+
+== Personal Takeouts
+
+* There is a world of Java outside the Spring Framework.
+The motivation behind this experiment is to prove to myself that it is possible to create reactive web applications outside heavy frameworks.
+I'm consistently annoyed by the Spring startup time.
+An empty Spring application can take up to 3 seconds to start.
+In return, however, it does a lot of heavy lifting for you, making you more productive.
+For example, I couldn't have thought that loading a simple `.properties` file needs to be done manually by reading it from the classpath.
+If I want to start listing what automagicaly configures and abstracts away, I don't think I'll be done in a day.
+This is me wishing there was a lighter version of Spring Framework.
+
+* Serialization and deserialization are expensive operations.
+Most modern frameworks process them asynchronously, in fact.
+In a nutshell, deserialization is reading the buffered InputStream while serialization is writing to an OutputStream.
+If done correctly, it can significantly improve performance.
+One method, which I didn't know until recently, is using `Flux<byte>` when serializing an object instead of a `Mono<byte[]>`.
+`reactor-netty` creates the response in `Transfer-Encoding: chunked`, which means the client will process the response until the end of the stream.
+This method can be very helpful when sending big files over the network.
+
+* Reactor or ReactiveX are my favorite implementation to write reactive applications.
+Thinking of the execution as a stream that passes from function to function is far more fun and logical than using magical annotations.
+
+* Unlike JDBC, R2dbc is still in its early stages.
+There is no ORM support, or type-safe SQL clients such as JOOQ or Jdbi yet.
+This doesn't mean that it is not stable.
